@@ -16,8 +16,12 @@ class Database:
         self.individual = individual
 
     def read_npy_data(self):
-        npy_file = np.load(self.npyPath)
-        return npy_file
+        try:
+            npy_file = np.load(self.npyPath)
+            return npy_file
+        except FileNotFoundError:
+            print('This file does not exist!')
+        
 
     def read_json_data(self):
         json_file_dict = {}

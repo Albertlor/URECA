@@ -27,7 +27,7 @@ while True:
 
 
 """
-Select an option about reading an existing data or create a new one
+Select an option about reading an existing json file from database or create a new one to database
 """
 while True:
     EXIST = input('Read an existing data? (True/False): ')
@@ -41,7 +41,7 @@ while True:
         print('Please enter a valid command')
         continue
 
-# If reading an existing database
+# If reading an existing json file from database
 if NEW_KEYPOINTS == False:
     BODY_PART_LIST = []
     while True:
@@ -62,9 +62,9 @@ if NEW_KEYPOINTS == False:
 
     database = Database(jsonPathDict=JSONFILEPATH_DICT, individual=INDIVIDUAL)
 
-# If creating a new database
+# If creating a new json file to database
 else:
-    NPYFILEPATH = r"C:\Users\ASUS\Academic\URECA\VideoPose3D\PoseEstimation\database\npy_data\albert_output.npy"
+    NPYFILEPATH = rf"C:\Users\ASUS\Academic\URECA\VideoPose3D\PoseEstimation\database\npy_data\Individual_{INDIVIDUAL}\Individual_{INDIVIDUAL}_output.npy"
     database = Database(npyPath=NPYFILEPATH, individual=INDIVIDUAL)
 
 
@@ -84,7 +84,11 @@ def read_from_database(new_keypoints=True):
     """
     if new_keypoints == True:
         coordinates = database.read_npy_data()
-        write_to_database(coordinates)
+        try:
+            if coordinates.all():
+                write_to_database(coordinates)
+        except AttributeError:
+            pass
 
     else:
         coordinates = database.read_json_data()
@@ -100,10 +104,11 @@ def read_from_database(new_keypoints=True):
             count += 1
 
         pprint(body_part_dict, indent=4)
+        return body_part_dict
     
 def write_to_database(coordinates):
     """
-    1. Check if the directory exists
+    1. Check if the directory exists or not
     2. Write the JSON file into the database
     """
     create_directory()
@@ -120,7 +125,7 @@ def write_to_database(coordinates):
 
 def create_directory():
     """
-    Create a new directory if the directory doesn't exist
+    Create a new directory for output json file if the directory doesn't exist
     """
     if os.path.isdir(PATH) == False:
         os.mkdir(PATH)
