@@ -10,7 +10,7 @@ RIGHT_HIP = 4
 RIGHT_KNEE = 5
 RIGHT_FOOT = 6
 CENTER_TORSO = 7
-UPPER_TORS0 = 8 #neck
+UPPER_TORSO = 8 #neck
 NOSE = 9 
 CENTER_HEAD = 10
 RIGHT_SHOULDER = 11
@@ -48,16 +48,16 @@ class Keypoints:
 
         return low_back_dict_json
 
-    def left_shoulder_keypoint(self):
+    def upper_torso_keypoint(self):
         count = 1
-        left_shoulder_dict = {}
+        upper_torso_dict = {}
         for coordinate in self.coordinates:
-            left_shoulder = coordinate[LEFT_SHOULDER].tolist()
-            left_shoulder_dict[f'LEFT_SHOULDER_{count}'] = left_shoulder
+            upper_torso = coordinate[UPPER_TORSO].tolist()
+            upper_torso_dict[f'UPPER_TORSO_{count}'] = upper_torso
             count += 1
-        left_shoulder_dict_json = Keypoints.to_json(left_shoulder_dict)
+        upper_torso_dict_json = Keypoints.to_json(upper_torso_dict)
 
-        return left_shoulder_dict_json
+        return upper_torso_dict_json
 
     def right_shoulder_keypoint(self):
         count = 1
@@ -70,6 +70,28 @@ class Keypoints:
 
         return right_shoulder_dict_json
 
+    def right_hand_keypoint(self):
+        count = 1
+        right_hand_dict = {}
+        for coordinate in self.coordinates:
+            right_hand = coordinate[RIGHT_HAND].tolist()
+            right_hand_dict[f'RIGHT_HAND_{count}'] = right_hand
+            count += 1
+        right_hand_dict_json = Keypoints.to_json(right_hand_dict)
+
+        return right_hand_dict_json
+
+    def left_shoulder_keypoint(self):
+        count = 1
+        left_shoulder_dict = {}
+        for coordinate in self.coordinates:
+            left_shoulder = coordinate[LEFT_SHOULDER].tolist()
+            left_shoulder_dict[f'LEFT_SHOULDER_{count}'] = left_shoulder
+            count += 1
+        left_shoulder_dict_json = Keypoints.to_json(left_shoulder_dict)
+
+        return left_shoulder_dict_json
+
     def left_hand_keypoint(self):
         count = 1
         left_hand_dict = {}
@@ -81,16 +103,6 @@ class Keypoints:
 
         return left_hand_dict_json
 
-    def right_hand_keypoint(self):
-        count = 1
-        right_hand_dict = {}
-        for coordinate in self.coordinates:
-            right_hand = coordinate[LEFT_HAND].tolist()
-            right_hand_dict[f'RIGHT_HAND_{count}'] = right_hand
-            count += 1
-        right_hand_dict_json = Keypoints.to_json(right_hand_dict)
-
-        return right_hand_dict_json
-
+    @staticmethod
     def to_json(data):
         return json.dumps(data, indent=4)

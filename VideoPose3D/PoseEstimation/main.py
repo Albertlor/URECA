@@ -1,59 +1,53 @@
 import os
+import argparse
 
 from utils.keypoints import Keypoints
+from utils.calculation import Calculation
 from database.database import Database
 from pprint import pprint
 
+ap = argparse.ArgumentParser()
+ap.add_argument("-b", "--body_part", type=str, help="body part to study")
+ap.add_argument("-e", "--exist", type=int, required=True, help="Read existing json file or Create new json file")
+ap.add_argument("-i", "--individual", type=int, required=True, help="Which individual are you specifying")
+args = vars(ap.parse_args())
+
 
 JSON_FILENAME = {
-    "LEFT_HAND": "left_hand_dict_json.json",
-    "LEFT_SHOULDER": "left_shoulder_dict_json.json",
     "LOW_BACK": "low_back_dict_json.json",
+    "UPPER_TORSO": "upper_torso_dict_json.json",
+    "RIGHT_SHOULDER": "right_shoulder_dict_json.json",
     "RIGHT_HAND": "right_hand_dict_json.json",
-    "RIGHT_SHOULDER": "right_shoulder_dict_json.json"
+    "LEFT_SHOULDER": "left_shoulder_dict_json.json",
+    "LEFT_HAND": "left_hand_dict_json.json"
 }
 
 
 """
-Specify which person we are going to study
+The person we want to specify
 """
-while True:
-    INDIVIDUAL = input("Which person are you specifying?: ")
-    if str(INDIVIDUAL).isdigit() == True:
-        break
-    else:
-        print('Please enter an integer')
-        continue
+INDIVIDUAL = args["individual"]
+LOAD = 50 #in Newton
 
 
 """
 Select an option about reading an existing json file from database or create a new one to database
 """
-while True:
-    EXIST = input('Read an existing data? (True/False): ')
-    if EXIST in ['TRUE', 'True', 'true', 'T', 't']:
-        NEW_KEYPOINTS = False
-        break
-    elif EXIST in ['FALSE', 'False', 'false', 'F', 'f']:
-        NEW_KEYPOINTS = True
-        break
-    else:
-        print('Please enter a valid command')
-        continue
+if args["exist"] == 1:
+    NEW_KEYPOINTS = False
+elif args["exist"] == 0:
+    NEW_KEYPOINTS = True
+else:
+    print('Please enter a valid command')
 
 # If reading an existing json file from database
 if NEW_KEYPOINTS == False:
-    BODY_PART_LIST = []
-    while True:
-        BODY_PART = input('Enter a body part of interest: ')
-        BODY_PART_LIST.append(BODY_PART)
-        answer = input('Any other body part of interest?: ')
-        if answer in ['Yes', 'yes', 'Y', 'y']:
-            continue
-        elif answer in ['No', 'no', 'N', 'n']:
-            break
-        else:
-            print('Please enter a valid command')
+    BODY_PART_LIST = ["LOW_BACK", 
+                      "UPPER_TORSO", 
+                      "RIGHT_SHOULDER", 
+                      "RIGHT_HAND", 
+                      "LEFT_SHOULDER", 
+                      "LEFT_HAND"]
 
     JSONFILEPATH_DICT = {}
     for BODY_PART in BODY_PART_LIST:
@@ -103,7 +97,7 @@ def read_from_database(new_keypoints=True):
             body_part_dict[BODY_PART_LIST[count]] = coordinates_list
             count += 1
 
-        pprint(body_part_dict, indent=4)
+        # pprint(body_part_dict, indent=4)
         return body_part_dict
     
 def write_to_database(coordinates):
@@ -115,10 +109,11 @@ def write_to_database(coordinates):
     keypoints = Keypoints(coordinates, individual=INDIVIDUAL)
     json_file_dict = {}
     json_file_dict['low_back_dict_json'] = keypoints.low_back_keypoint()
-    json_file_dict['left_shoulder_dict_json'] = keypoints.left_shoulder_keypoint()
+    json_file_dict['upper_torso_dict_json'] = keypoints.upper_torso_keypoint()
     json_file_dict['right_shoulder_dict_json'] = keypoints.right_shoulder_keypoint()
-    json_file_dict['left_hand_dict_json'] = keypoints.left_hand_keypoint()
     json_file_dict['right_hand_dict_json'] = keypoints.right_hand_keypoint()
+    json_file_dict['left_shoulder_dict_json'] = keypoints.left_shoulder_keypoint()
+    json_file_dict['left_hand_dict_json'] = keypoints.left_hand_keypoint()
 
     for filename, file in json_file_dict.items():
         database.write_json_data(json_file=file, json_filename=filename)
@@ -132,7 +127,31 @@ def create_directory():
         print(f'Successfully created directory {DIRECTORY}!')  
 
 def main():
-    read_from_database(new_keypoints=NEW_KEYPOINTS)
+    body_part_dict = read_from_database(new_keypoints=NEW_KEYPOINTS)
+    
+    low_back = body_part_dict['LOW_BACK'][0]
+    upper_torso = body_part_dict['UPPER_TORSO'][0]
+    right_shoulder = body_part_dict['RIGHT_SHOULDER'][0]
+    right_hand = body_part_dict['RIGHT_HAND'][0]
+    left_shoulder = body_part_dict['LEFT_SHOULDER'][0]
+    left_hand = body_part_dict['LEFT_HAND'][0]
+
+    calculation = Calculation(load=LOAD, low_back=low_back, upper_torso=upper_torso, right_shoulder=right_shoulder, right_hand=right_hand, \
+                              left_shoulder=left_shoulder, left_hand=left_hand)
+    
+    moment = calculation.moment()
+
+    body_part = (args["body_part"]).lower()
+
+    if body_part == 'low_back':
+        print(f'Moment about Low Back: {moment[0]}Nm')
+    elif body_part == 'shoulder':
+        print(f'Moment about Shoulders: {moment[1]}Nm')
+    elif body_part == 'all':
+        print(f'Moment about Low Back: {moment[0]}Nm')
+        print(f'Moment about Shoulders: {moment[1]}Nm')
+    else:
+        print('Please enter a valid command!')
 
 if __name__ == '__main__':
     main()
