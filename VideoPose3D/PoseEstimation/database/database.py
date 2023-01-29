@@ -26,7 +26,7 @@ class Database:
     def read_json_data(self):
         json_file_dict = {}
         count = 0
-        for jsonPath in self.jsonPathDict.values():
+        for jsonPath in list(self.jsonPathDict.values()):
             try:
                 with open(f'{jsonPath}') as f:
                     json_file = json.load(f)
