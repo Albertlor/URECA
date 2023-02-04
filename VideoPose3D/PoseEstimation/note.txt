@@ -1,0 +1,7 @@
+```
+1. Angular acceleration of upper body
+2. Moment of inertia of upper body
+3. Center of Mass of upper body
+4. Load's Weight
+5. Moment about low back
+```
