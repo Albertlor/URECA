@@ -1,7 +1,23 @@
 ```
+Moment
 1. Angular acceleration of upper body
 2. Moment of inertia of upper body
 3. Center of Mass of upper body
 4. Load's Weight
 5. Moment about low back
+```
+
+```
+Moment of Inertia
+1. Calculate the radius of gyration of each 
+   body segment according to table 4
+2. Calculate the mass of each segment according to 
+   table 4
+3. Calculate the moment of inertia according to 
+   Step 1 and Step 2
+4. Apply Parallel Axis Theorem to move the axis along
+   the body segment to low back
+5. Sum up the total of the moment of inertia of each
+   body segment to get the total moment of inertia
+   about the low back
 ```

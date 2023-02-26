@@ -3,9 +3,10 @@ import argparse
 import math
 import time
 import cv2
+import json
 
-from utils.keypoints import Keypoints
-from utils.calculation import Calculation
+from body_info.keypoints import Keypoints
+from body_info.dynamics import Dynamics
 from database.database import Database
 from pprint import pprint
 
@@ -19,10 +20,14 @@ args = vars(ap.parse_args())
 
 JSON_FILENAME = {
     "LOW_BACK": "low_back_dict_json.json",
+    "CENTER_TORSO": "center_torso_dict_json.json",
     "UPPER_TORSO": "upper_torso_dict_json.json",
+    "CENTER_HEAD": "center_head_dict_json.json",
     "LEFT_SHOULDER": "left_shoulder_dict_json.json",
+    "LEFT_ELBOW": "left_elbow_dict_json.json",
     "LEFT_HAND": "left_hand_dict_json.json",
     "RIGHT_SHOULDER": "right_shoulder_dict_json.json",
+    "RIGHT_ELBOW": "right_elbow_dict_json.json",
     "RIGHT_HAND": "right_hand_dict_json.json"
 }
 
@@ -32,6 +37,7 @@ The person we want to specify
 """
 INDIVIDUAL = args["individual"]
 LOAD = 50 #in Newton
+WEIGHT = 60 #in kg
 
 
 """
@@ -47,10 +53,14 @@ else:
 # If reading an existing json file from database
 if NEW_KEYPOINTS == False:
     BODY_PART_LIST = ["LOW_BACK", 
-                      "UPPER_TORSO", 
-                      "LEFT_SHOULDER", 
+                      "CENTER_TORSO",
+                      "UPPER_TORSO",
+                      "CENTER_HEAD", 
+                      "LEFT_SHOULDER",
+                      "LEFT_ELBOW", 
                       "LEFT_HAND",
-                      "RIGHT_SHOULDER", 
+                      "RIGHT_SHOULDER",
+                      "RIGHT_ELBOW", 
                       "RIGHT_HAND"]
 
     JSONFILEPATH_DICT = {}
@@ -116,10 +126,14 @@ def write_to_database(coordinates):
     keypoints = Keypoints(coordinates, individual=INDIVIDUAL)
     json_file_dict = {}
     json_file_dict['low_back_dict_json'] = keypoints.low_back_keypoint()
+    json_file_dict['center_torso_dict_json'] = keypoints.center_torso_keypoint()
     json_file_dict['upper_torso_dict_json'] = keypoints.upper_torso_keypoint()
+    json_file_dict['center_head_dict_json'] = keypoints.center_head_keypoint()
     json_file_dict['left_shoulder_dict_json'] = keypoints.left_shoulder_keypoint()
+    json_file_dict['left_elbow_dict_json'] = keypoints.left_elbow_keypoint()
     json_file_dict['left_hand_dict_json'] = keypoints.left_hand_keypoint()
     json_file_dict['right_shoulder_dict_json'] = keypoints.right_shoulder_keypoint()
+    json_file_dict['right_elbow_dict_json'] = keypoints.right_elbow_keypoint()
     json_file_dict['right_hand_dict_json'] = keypoints.right_hand_keypoint()
 
     for filename, file in json_file_dict.items():
@@ -133,10 +147,11 @@ def create_directory():
         os.mkdir(PATH)
         print(f'Successfully created directory {DIRECTORY}!')  
 
-
 video = cv2.VideoCapture(args["video"])
 count_frame = 0
+replay = 0
 last_time = time.time()
+CACHE = [0, 0]
 while True:
     count_frame += 1
     if video.get(cv2.CAP_PROP_FRAME_COUNT) == count_frame:
@@ -145,8 +160,33 @@ while True:
 
     ret, frame = video.read()
     duration = time.time() - last_time
+
+    # if count_frame == 0:
+    #     replay = 1
+
+    # CACHE.append(last_time)
+    # if len(CACHE) == 3:
+    #     if replay != 1 :
+    #         with open('config.json') as f:
+    #             config = json.load(f)
+
+    #         config[f"CACHE_{count_frame}: "] = CACHE
+
+    #         with open("config.json", 'w') as f:
+    #             json.dump(config, f, indent=4)
+
+    #         CACHE.pop(0)
+
     last_time = time.time()
     fps = str(round((1/duration), 2))
+
+    with open('config.json', 'w') as f:
+        json.dump({"Individual": INDIVIDUAL,
+                   "Load": LOAD,
+                   "Weight": WEIGHT,
+                   "Duration": duration,
+                   "Frame": count_frame 
+                   }, f)
 
     if ret:
         #frame = imutils.resize(frame, width=800, inter=cv2.INTER_LINEAR)
@@ -154,44 +194,54 @@ while True:
 
         body_part_dict = read_from_database(new_keypoints=NEW_KEYPOINTS)
         
-        low_back = body_part_dict['LOW_BACK'][count_frame]
-        upper_torso = body_part_dict['UPPER_TORSO'][count_frame]
-        left_shoulder = body_part_dict['LEFT_SHOULDER'][count_frame]
-        left_hand = body_part_dict['LEFT_HAND'][count_frame]
-        right_shoulder = body_part_dict['RIGHT_SHOULDER'][count_frame]
-        right_hand = body_part_dict['RIGHT_HAND'][count_frame]
+        try:
+            low_back = body_part_dict['LOW_BACK'][count_frame]
+            center_torso = body_part_dict['CENTER_TORSO'][count_frame]
+            upper_torso = body_part_dict['UPPER_TORSO'][count_frame]
+            center_head = body_part_dict['CENTER_HEAD'][count_frame]
+            left_shoulder = body_part_dict['LEFT_SHOULDER'][count_frame]
+            left_elbow = body_part_dict['LEFT_ELBOW'][count_frame]
+            left_hand = body_part_dict['LEFT_HAND'][count_frame]
+            right_shoulder = body_part_dict['RIGHT_SHOULDER'][count_frame]
+            right_elbow = body_part_dict['RIGHT_ELBOW'][count_frame]
+            right_hand = body_part_dict['RIGHT_HAND'][count_frame]
 
-        calculation = Calculation(load=LOAD, low_back=low_back, upper_torso=upper_torso, left_shoulder=left_shoulder, left_hand=left_hand, \
-                                right_shoulder=right_shoulder, right_hand=right_hand)
-        
-        moment = calculation.moment()
+            # position = Position(load=LOAD, low_back=low_back, upper_torso=upper_torso, left_shoulder=left_shoulder, left_hand=left_hand, \
+            #                         right_shoulder=right_shoulder, right_hand=right_hand)
+            
+            dynamics = Dynamics(LOAD, low_back, center_torso, upper_torso, center_head, left_shoulder, left_elbow, left_hand, 
+                                right_shoulder, right_elbow, right_hand)
+            moment = dynamics.moment()
 
-        body_part = (args["body_part"]).lower()
+            body_part = (args["body_part"]).lower()
 
-        if body_part == 'low_back':
-            print(f'Moment about Low Back: {moment[0]}Nm')
-            print(f'Low Back Flexion Angle: {moment[2] * 180 / math.pi}deg')
-            print(f'frame: {count_frame+1}')
-            cv2.putText(frame, f'Moment about Low Back: {moment[0]}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
-            cv2.putText(frame, f'Spine Flexion Angle:   {moment[2] * 180 / math.pi}deg', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
-        elif body_part == 'shoulder':
-            print(f'Moment about Shoulders: {moment[1]}Nm')
-            print(f'Low Back Flexion Angle: {moment[2] * 180 / math.pi}deg')
-            print(f'frame: {count_frame+1}')
-            cv2.putText(frame, f'Moment about Shoulder: {moment[1]}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
-            cv2.putText(frame, f'Spine Flexion Angle:   {moment[2] * 180 / math.pi}deg', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
-        elif body_part == 'all':
-            print(f'Moment about Low Back: {moment[0]}Nm')
-            print(f'Moment about Shoulders: {moment[1]}Nm')
-            print(f'Low Back Flexion Angle: {moment[2] * 180 / math.pi}deg')
-            print(f'frame: {count_frame+1}')
-            cv2.putText(frame, f'Moment about Low Back: {moment[0]}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
-            cv2.putText(frame, f'Moment about Shoulder: {moment[1]}', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
-            cv2.putText(frame, f'Spine Flexion Angle:   {moment[2] * 180 / math.pi}deg', (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
-        else:
-            print('Please enter a valid command!')
+            if body_part == 'low_back':
+                print(f'Moment about Low Back: {moment[0]}Nm')
+                print(f'Low Back Flexion Angle: {moment[2] * 180 / math.pi}deg')
+                print(f'frame: {count_frame}')
+                cv2.putText(frame, f'Moment about Low Back: {moment[0]}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
+                cv2.putText(frame, f'Spine Flexion Angle:   {moment[2] * 180 / math.pi}deg', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
+            elif body_part == 'shoulder':
+                print(f'Moment about Shoulders: {moment[1]}Nm')
+                print(f'Low Back Flexion Angle: {moment[2] * 180 / math.pi}deg')
+                print(f'frame: {count_frame}')
+                cv2.putText(frame, f'Moment about Shoulder: {moment[1]}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
+                cv2.putText(frame, f'Spine Flexion Angle:   {moment[2] * 180 / math.pi}deg', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
+            elif body_part == 'all':
+                print(f'Moment about Low Back: {moment[0]}Nm')
+                print(f'Moment about Shoulders: {moment[1]}Nm')
+                print(f'Low Back Flexion Angle: {moment[2] * 180 / math.pi}deg')
+                print(f'frame: {count_frame}')
+                cv2.putText(frame, f'Moment about Low Back: {moment[0]}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
+                cv2.putText(frame, f'Moment about Shoulder: {moment[1]}', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
+                cv2.putText(frame, f'Spine Flexion Angle:   {moment[2] * 180 / math.pi}deg', (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
+            else:
+                print('Please enter a valid command!')
 
-        cv2.imshow("Frames", frame)
+            cv2.imshow("Frames", frame)
+
+        except TypeError:
+            break
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
         break
