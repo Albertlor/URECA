@@ -6,7 +6,6 @@ import cv2
 import json
 
 from body_info.keypoints import Keypoints
-from body_info.dynamics import Dynamics
 from body_info.moment import Moment
 from database.database import Database
 from pprint import pprint

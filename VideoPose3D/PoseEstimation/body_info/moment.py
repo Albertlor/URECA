@@ -5,7 +5,6 @@ import json
 from body_info.acceleration import Acceleration
 from body_info.utils import midpoint
 from body_info.utils import magnitude
-from body_info.utils import trigonometry
 from body_info.utils import moment_of_inertia
 
 
