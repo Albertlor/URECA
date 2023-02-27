@@ -53,7 +53,7 @@ class Keypoints:
         center_torso_dict = {}
         for coordinate in self.coordinates:
             center_torso = coordinate[CENTER_TORSO].tolist()
-            center_torso_dict[f'UPPER_TORSO_{count}'] = center_torso
+            center_torso_dict[f'CENTER_TORSO_{count}'] = center_torso
             count += 1
         center_torso_dict_json = Keypoints.to_json(center_torso_dict)
 

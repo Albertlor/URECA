@@ -1,20 +1,6 @@
 import math
 import json
 
-CACHE = []
-
-def trigonometry(dist_from_low_back_to_shoulder, dist_from_low_back_to_hand, dist_from_shoulder_to_hand):
-        a = dist_from_low_back_to_shoulder
-        b = dist_from_low_back_to_hand
-        c = dist_from_shoulder_to_hand
-
-        #Angle between b and c
-        A = math.acos( (b**2 + c**2 - a**2) / (2*b*c) )
-        B = math.asin( (b/a) * (math.sin(A)) )
-        C = math.pi - A - B
-
-        return [A, B, C]
-
 
 def midpoint(left_body_part, right_body_part):
         midpoint_x = (left_body_part[0] + right_body_part[0]) / 2
@@ -25,19 +11,6 @@ def midpoint(left_body_part, right_body_part):
 
 def magnitude(vector):
     return math.sqrt(sum(pow(element, 2) for element in vector))
-
-def cache():
-    with open('config.json') as f:
-        config = json.load(f)
-        
-    LAST_TIME = config["LAST_TIME"]
-    TIME = config["TIME"]
-
-    print(LAST_TIME)
-    print(TIME)
-    print(TIME - LAST_TIME)
-
-    CACHE.append()
 
 def moment_of_inertia(load, weight, m, k_s, k_t, k_l, L):
     I_xx = (m * weight) * (k_s * L)**2 #moment of inertia about sagittal axis
