@@ -164,7 +164,7 @@ while True:
     last_time = time.time()
     fps = str(round((1/duration), 2))
 
-    if ret:
+    if ret and (count_frame%5==0):
         #frame = imutils.resize(frame, width=800, inter=cv2.INTER_LINEAR)
         cv2.putText(frame, "fps: " + fps, (50, 20), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (255, 0, 0), 1, cv2.LINE_AA)
 
@@ -195,24 +195,33 @@ while True:
                 M = moment.moment()
 
                 if replay != 1:
-                    with open('moment.json') as f1:
+                    with open('moment_back.json') as f1:
                         config1 = json.load(f1)
 
-                    config1[f"Moment_Frame_{count_frame}"] = M[0]
+                    config1[f"Moment_Back_{count_frame}"] = M[0]
 
-                    with open('moment.json', 'w') as f1:
+                    with open('moment_back.json', 'w') as f1:
                         json.dump(config1, f1, indent=4)
+
+
+                    with open('moment_shoulder.json') as f2:
+                        config2 = json.load(f2)
+
+                    config2[f"Moment_Shoulder_{count_frame}"] = M[2]
+
+                    with open('moment_shoulder.json', 'w') as f2:
+                        json.dump(config2, f2, indent=4)
 
                 body_part = (args["body_part"]).lower()
 
                 if body_part == 'low_back':
                     print(f'Moment about Low Back: {M[0]}Nm')
-                    print(f'Direction of the Moment: {M[1]}')
-                    print(f'Low Back Flexion Angle: {M[2] * 180 / math.pi}deg')
+                    print(f'Moment about Shoulder: {M[2]}Nm')
+                    print(f'Low Back Flexion Angle: {M[4] * 180 / math.pi}deg')
                     print(f'frame: {count_frame}')
                     cv2.putText(frame, f'Moment about Low Back: {M[0]}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
-                    cv2.putText(frame, f'Direction: {M[1]}', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
-                    cv2.putText(frame, f'Spine Flexion Angle:   {M[2] * 180 / math.pi}deg', (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(frame, f'Moment about Shoulder: {M[2]}', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(frame, f'Spine Flexion Angle:   {M[4] * 180 / math.pi}deg', (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
                 # elif body_part == 'shoulder':
                 #     print(f'Moment about Shoulders: {moment[1]}Nm')
                 #     print(f'Low Back Flexion Angle: {moment[2] * 180 / math.pi}deg')

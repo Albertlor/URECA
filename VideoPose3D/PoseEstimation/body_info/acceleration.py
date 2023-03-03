@@ -5,9 +5,10 @@ from body_info.utils import magnitude
 
 
 class Acceleration:
-    with open('config.json') as f:
-        config = json.load(f)
-    dt = config['Duration']
+    # with open('config.json') as f:
+    #     config = json.load(f)
+    # dt = config['Duration']
+    dt = (1/30) * 5 #0.167s
 
     def __init__(self,
                 absolute_vector,

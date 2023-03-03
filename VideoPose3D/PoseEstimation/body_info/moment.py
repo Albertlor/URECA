@@ -20,6 +20,7 @@ class Moment:
     rA = []
     rB = []
     rD = []
+    rE = []
     rG = []
     rI = []
 
@@ -124,7 +125,7 @@ class Moment:
         rE_right_4 = right_shoulder[f'RIGHT_SHOULDER_{n}'] #position vector of the right shoulder at frame n
         rE_right = [rE_right_1, rE_right_2, rE_right_3, rE_right_4]
 
-        rE = [
+        cls.rE = [
                 midpoint(rE_left[0], rE_right[0]),
                 midpoint(rE_left[1], rE_right[1]),
                 midpoint(rE_left[2], rE_right[2]),
@@ -154,7 +155,7 @@ class Moment:
                     midpoint(rG_left[3], rG_right[3]),
                 ]
 
-        rFE = (np.multiply((np.array(cls.rG) - np.array(rE)), 0.5772)).tolist()
+        rFE = (np.multiply((np.array(cls.rG) - np.array(cls.rE)), 0.5772)).tolist()
 
         acceleration = Acceleration(cls.rG, rFE) #vF = vG
         I = moment_of_inertia(load, weight, cls.m2, k_s, k_t, k_l, L)
@@ -265,22 +266,33 @@ class Moment:
             r2 = (np.array(cls.rG) - np.array(cls.rA))[2]
             r3 = (np.array(cls.rD) - np.array(cls.rA))[2]
             r4 = (np.array(cls.rB) - np.array(cls.rA))[2]
+            r5 = (np.array(cls.rG) - np.array(cls.rE))[2]
+            r6 = (np.array(cls.rI) - np.array(cls.rE))[2]
 
             F_L = np.multiply(load, cls.g_dir)
             g = np.multiply(cls.g_mag, cls.g_dir)
 
-            M = [0, 0, 0] - \
-                np.cross(r1, F_L) - \
-                (np.cross(r1, np.multiply(cls.m1, g)) + np.cross(r2, np.multiply(cls.m2, g)) + np.cross(r3, np.multiply(cls.m3, g)) + np.cross(r4, np.multiply(cls.m4, g))) + \
-                (np.cross(r1, np.multiply(cls.m1, a1)) + np.cross(r2, np.multiply(cls.m2, a2)) + np.cross(r3, np.multiply(cls.m3, a3)) + np.cross(r4, np.multiply(cls.m4, a4))) + \
-                (np.multiply(I1, alpha1) + np.multiply(I2, alpha2) + np.multiply(I3, alpha3) + np.multiply(I4, alpha4))
+            M_back = [0, 0, 0] - \
+                     np.cross(r1, F_L) - \
+                     (np.cross(r1, np.multiply(cls.m1, g)) + np.cross(r2, np.multiply(cls.m2, g)) + np.cross(r3, np.multiply(cls.m3, g)) + np.cross(r4, np.multiply(cls.m4, g))) + \
+                     (np.cross(r1, np.multiply(cls.m1, a1)) + np.cross(r2, np.multiply(cls.m2, a2)) + np.cross(r3, np.multiply(cls.m3, a3)) + np.cross(r4, np.multiply(cls.m4, a4))) + \
+                     (np.multiply(I1, alpha1) + np.multiply(I2, alpha2) + np.multiply(I3, alpha3) + np.multiply(I4, alpha4))
+
+            M_shoulder = [0, 0, 0] - \
+                         np.cross(r6, F_L) - \
+                         (np.cross(r6, np.multiply(cls.m1, g)) + np.cross(r5, np.multiply(cls.m2, g))) + \
+                         (np.cross(r6, np.multiply(cls.m1, a1)) + np.cross(r5, np.multiply(cls.m2, a2))) + \
+                         (np.multiply(I1, alpha1) + np.multiply(I2, alpha2))
 
             theta = cls.angle_between_spine_and_z_axis()
 
-            M_mag = magnitude(M.tolist())
-            M_dir = np.multiply(M, 1/M_mag)
+            M_back_mag = magnitude(M_back.tolist())
+            M_back_dir = np.multiply(M_back, 1/M_back_mag)
 
-            return [M_mag, M_dir, theta]
+            M_shoulder_mag = magnitude(M_shoulder.tolist())
+            M_shoulder_dir = np.multiply(M_shoulder, 1/M_shoulder_mag)
+
+            return [M_back_mag, M_back_dir, M_shoulder_mag, M_shoulder_dir, theta]
 
         except Exception as e:
             import traceback
