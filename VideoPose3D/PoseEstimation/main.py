@@ -7,6 +7,8 @@ import json
 
 from body_info.keypoints import Keypoints
 from body_info.moment import Moment
+from body_info.risk_possibility import Risk
+from body_info.utils import animate
 from database.database import Database
 from pprint import pprint
 
@@ -149,10 +151,14 @@ def create_directory():
 
 video = cv2.VideoCapture(args["video"])
 count_frame = 0
+count = 0
 replay = 0
+num_repetition = 0
+hold = 0 #to hold the repetition to avoid keep adding when the angle is 45 degrees
 last_time = time.time()
 while True:
     count_frame += 1
+    count += 1
     if video.get(cv2.CAP_PROP_FRAME_COUNT) == count_frame:
         video.set(cv2.CAP_PROP_POS_FRAMES, 0)
         count_frame = 1
@@ -194,6 +200,20 @@ while True:
                 moment = Moment()
                 M = moment.moment()
 
+                if (M[6] * 180 / math.pi) >= 45 and hold == 0:
+                    num_repetition += 1
+                    hold = 1
+                elif (M[6] * 180 / math.pi) < 45:
+                    hold = 0
+
+                risk = Risk(M[0], M[1], 0, 0, num_repetition)
+                risk_back, accumulated_risk_back, risk_shoulder = risk.risk()
+                print(f'Risk Probability of Low Back: {risk_back}')
+                print(f'Accumulated Risk Probability of Low Back: {risk_back}')
+                print(f'Repetition: {num_repetition}')
+
+                animate(count, risk_back, accumulated_risk_back)
+
                 if replay != 1:
                     with open('moment_back.json') as f1:
                         config1 = json.load(f1)
@@ -207,7 +227,7 @@ while True:
                     with open('moment_shoulder.json') as f2:
                         config2 = json.load(f2)
 
-                    config2[f"Moment_Shoulder_{count_frame}"] = M[2]
+                    config2[f"Moment_Shoulder_{count_frame}"] = M[3]
 
                     with open('moment_shoulder.json', 'w') as f2:
                         json.dump(config2, f2, indent=4)
@@ -216,12 +236,12 @@ while True:
 
                 if body_part == 'low_back':
                     print(f'Moment about Low Back: {M[0]}Nm')
-                    print(f'Moment about Shoulder: {M[2]}Nm')
-                    print(f'Low Back Flexion Angle: {M[4] * 180 / math.pi}deg')
+                    print(f'Moment about Shoulder: {M[3]}Nm')
+                    print(f'Low Back Flexion Angle: {M[6] * 180 / math.pi}deg')
                     print(f'frame: {count_frame}')
                     cv2.putText(frame, f'Moment about Low Back: {M[0]}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
-                    cv2.putText(frame, f'Moment about Shoulder: {M[2]}', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
-                    cv2.putText(frame, f'Spine Flexion Angle:   {M[4] * 180 / math.pi}deg', (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(frame, f'Moment about Shoulder: {M[3]}', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(frame, f'Spine Flexion Angle:   {M[6] * 180 / math.pi}deg', (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
                 # elif body_part == 'shoulder':
                 #     print(f'Moment about Shoulders: {moment[1]}Nm')
                 #     print(f'Low Back Flexion Angle: {moment[2] * 180 / math.pi}deg')

@@ -1,4 +1,3 @@
-import json
 import numpy as np
 
 from body_info.utils import magnitude
@@ -10,9 +9,7 @@ class Acceleration:
     # dt = config['Duration']
     dt = (1/30) * 5 #0.167s
 
-    def __init__(self,
-                absolute_vector,
-                relative_vector):
+    def __init__(self, absolute_vector, relative_vector):
         self.absolute_vector = absolute_vector
         self.relative_vector = relative_vector
 
@@ -22,7 +19,7 @@ class Acceleration:
         abs_v_2 = np.multiply((np.array(abs_r_3) - np.array(abs_r_1)), 1/(2*Acceleration.dt))
         abs_v_3 = np.multiply((np.array(abs_r_4) - np.array(abs_r_2)), 1/(2*Acceleration.dt))
 
-        abs_a_3 = (np.multiply((abs_v_3 - abs_v_2), 1/Acceleration.dt)).tolist()
+        abs_a_3 = np.multiply((abs_v_3 - abs_v_2), 1/Acceleration.dt)
 
         return abs_a_3
 
@@ -47,10 +44,10 @@ class Acceleration:
         omega_2_dir = np.multiply(R2, 1/(magnitude(R2)))
         omega_3_dir = np.multiply(R3, 1/(magnitude(R3)))
 
-        omega_2 = np.multiply(omega_2_mag, omega_2_dir)
-        omega_3 = np.multiply(omega_3_mag, omega_3_dir)
+        omega_2 = np.multiply(omega_2_dir, omega_2_mag)
+        omega_3 = np.multiply(omega_3_dir, omega_3_mag)
 
-        alpha_3 = (np.multiply((omega_3 - omega_2), 1/Acceleration.dt)).tolist()
+        alpha_3 = np.multiply((omega_3 - omega_2), 1/Acceleration.dt)
 
         return alpha_3
 

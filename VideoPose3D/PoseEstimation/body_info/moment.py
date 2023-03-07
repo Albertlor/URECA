@@ -3,9 +3,7 @@ import math
 import json
 
 from body_info.acceleration import Acceleration
-from body_info.utils import midpoint
-from body_info.utils import magnitude
-from body_info.utils import moment_of_inertia
+from body_info.utils import midpoint, magnitude, moment_of_inertia
 
 
 class Moment:
@@ -247,15 +245,15 @@ class Moment:
             a_upper_arm, alpha_upper_arm, I_upper_arm = cls.upper_arm(individual, load, weight, n)
             a_forearm, alpha_forearm, I_forearm = cls.forearm(individual, load, weight, n)
 
-            a1 = np.array(a_forearm)
-            a2 = np.array(a_upper_arm)
-            a3 = np.array(a_head)
-            a4 = np.array(a_trunk)
+            a1 = a_forearm
+            a2 = a_upper_arm
+            a3 = a_head
+            a4 = a_trunk
 
-            alpha1 = np.array(alpha_forearm)
-            alpha2 = np.array(alpha_upper_arm)
-            alpha3 = np.array(alpha_head)
-            alpha4 = np.array(alpha_trunk)
+            alpha1 = alpha_forearm
+            alpha2 = alpha_upper_arm
+            alpha3 = alpha_head
+            alpha4 = alpha_trunk
 
             I1 = I_forearm
             I2 = I_upper_arm
@@ -272,17 +270,25 @@ class Moment:
             F_L = np.multiply(load, cls.g_dir)
             g = np.multiply(cls.g_mag, cls.g_dir)
 
-            M_back = [0, 0, 0] - \
+            M_back = np.array([0, 0, 0]) - \
                      np.cross(r1, F_L) - \
                      (np.cross(r1, np.multiply(cls.m1, g)) + np.cross(r2, np.multiply(cls.m2, g)) + np.cross(r3, np.multiply(cls.m3, g)) + np.cross(r4, np.multiply(cls.m4, g))) + \
                      (np.cross(r1, np.multiply(cls.m1, a1)) + np.cross(r2, np.multiply(cls.m2, a2)) + np.cross(r3, np.multiply(cls.m3, a3)) + np.cross(r4, np.multiply(cls.m4, a4))) + \
                      (np.multiply(I1, alpha1) + np.multiply(I2, alpha2) + np.multiply(I3, alpha3) + np.multiply(I4, alpha4))
-
-            M_shoulder = [0, 0, 0] - \
+            
+            F_back_mag = np.dot((np.multiply(cls.m1, g) + np.multiply(cls.m2, g) + np.multiply(cls.m3, g) + np.multiply(cls.m4, g) + \
+                                 np.multiply(cls.m1, a1) + np.multiply(cls.m2, a2) + np.multiply(cls.m3, a3) + np.multiply(cls.m4, a4) + \
+                                 F_L), np.multiply(r4, 1/magnitude(r4)))
+            
+            M_shoulder = np.array([0, 0, 0]) - \
                          np.cross(r6, F_L) - \
                          (np.cross(r6, np.multiply(cls.m1, g)) + np.cross(r5, np.multiply(cls.m2, g))) + \
                          (np.cross(r6, np.multiply(cls.m1, a1)) + np.cross(r5, np.multiply(cls.m2, a2))) + \
                          (np.multiply(I1, alpha1) + np.multiply(I2, alpha2))
+            
+            F_shoulder_mag = np.dot((np.multiply(cls.m1, g) + np.multiply(cls.m2, g) + \
+                                     np.multiply(cls.m1, a1) + np.multiply(cls.m2, a2) + \
+                                     F_L), np.multiply(r4, 1/magnitude(r4)))
 
             theta = cls.angle_between_spine_and_z_axis()
 
@@ -292,7 +298,7 @@ class Moment:
             M_shoulder_mag = magnitude(M_shoulder.tolist())
             M_shoulder_dir = np.multiply(M_shoulder, 1/M_shoulder_mag)
 
-            return [M_back_mag, M_back_dir, M_shoulder_mag, M_shoulder_dir, theta]
+            return [M_back_mag, F_back_mag, M_back_dir, M_shoulder_mag, F_shoulder_mag, M_shoulder_dir, theta]
 
         except Exception as e:
             import traceback
