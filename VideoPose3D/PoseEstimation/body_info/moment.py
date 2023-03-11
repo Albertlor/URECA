@@ -270,15 +270,23 @@ class Moment:
             F_L = np.multiply(load, cls.g_dir)
             g = np.multiply(cls.g_mag, cls.g_dir)
 
+            theta = cls.angle_between_spine_and_z_axis()
+
+            mass = weight / cls.g_mag
+
             M_back = np.array([0, 0, 0]) - \
                      np.cross(r1, F_L) - \
-                     (np.cross(r1, np.multiply(cls.m1, g)) + np.cross(r2, np.multiply(cls.m2, g)) + np.cross(r3, np.multiply(cls.m3, g)) + np.cross(r4, np.multiply(cls.m4, g))) + \
-                     (np.cross(r1, np.multiply(cls.m1, a1)) + np.cross(r2, np.multiply(cls.m2, a2)) + np.cross(r3, np.multiply(cls.m3, a3)) + np.cross(r4, np.multiply(cls.m4, a4))) + \
-                     (np.multiply(I1, alpha1) + np.multiply(I2, alpha2) + np.multiply(I3, alpha3) + np.multiply(I4, alpha4))
+                     (np.cross(r1, np.multiply(2 * mass * cls.m1, g)) + np.cross(r2, np.multiply(2 * mass * cls.m2, g)) + np.cross(r3, np.multiply(mass * cls.m3, g)) + np.cross(r4, np.multiply(mass * cls.m4, g))) + \
+                     (np.cross(r1, np.multiply(2 * mass * cls.m1, a1)) + np.cross(r2, np.multiply(2 * mass * cls.m2, a2)) + np.cross(r3, np.multiply(mass * cls.m3, a3)) + np.cross(r4, np.multiply(mass * cls.m4, a4))) + \
+                     (np.multiply(2 * I1, alpha1) + np.multiply(2 * I2, alpha2) + np.multiply(I3, alpha3) + np.multiply(I4, alpha4))
             
-            F_back_mag = np.dot((np.multiply(cls.m1, g) + np.multiply(cls.m2, g) + np.multiply(cls.m3, g) + np.multiply(cls.m4, g) + \
-                                 np.multiply(cls.m1, a1) + np.multiply(cls.m2, a2) + np.multiply(cls.m3, a3) + np.multiply(cls.m4, a4) + \
-                                 F_L), np.multiply(r4, 1/magnitude(r4)))
+            F_back_mag = abs(np.dot((np.multiply(2 * mass * cls.m1, g) + np.multiply(2 * mass * cls.m2, g) + np.multiply(mass * cls.m3, g) + np.multiply(mass * cls.m4, g) + \
+                             np.multiply(2 * mass * cls.m1, a1) + np.multiply(2 * mass * cls.m2, a2) + np.multiply(mass * cls.m3, a3) + np.multiply(mass * cls.m4, a4) + \
+                             F_L), np.multiply(r4, 1/magnitude(r4))))
+            
+            # gamma = math.acos(np.dot(r1, cls.g_dir) / magnitude(r1))
+
+            # F_back_mag = 0.045*168*weight*math.sin(theta) + 0.5*(magnitude(F_L))*(magnitude(r1))*math.sin(gamma) + 0.4*weight + 0.8*magnitude(F_L)
             
             M_shoulder = np.array([0, 0, 0]) - \
                          np.cross(r6, F_L) - \
@@ -289,8 +297,6 @@ class Moment:
             F_shoulder_mag = np.dot((np.multiply(cls.m1, g) + np.multiply(cls.m2, g) + \
                                      np.multiply(cls.m1, a1) + np.multiply(cls.m2, a2) + \
                                      F_L), np.multiply(r4, 1/magnitude(r4)))
-
-            theta = cls.angle_between_spine_and_z_axis()
 
             M_back_mag = magnitude(M_back.tolist())
             M_back_dir = np.multiply(M_back, 1/M_back_mag)

@@ -8,7 +8,7 @@ import json
 from body_info.keypoints import Keypoints
 from body_info.moment import Moment
 from body_info.risk_possibility import Risk
-from body_info.utils import animate
+from body_info.utils import cumulative_damage, non_cumulative_damage
 from database.database import Database
 from pprint import pprint
 
@@ -39,7 +39,8 @@ The person we want to specify
 """
 INDIVIDUAL = args["individual"]
 LOAD = 50 #in Newton
-WEIGHT = 60 #in kg
+WEIGHT = 600 #in Newton
+ACTION_LIMIT = 3433 #in Newton
 
 
 """
@@ -152,9 +153,13 @@ def create_directory():
 video = cv2.VideoCapture(args["video"])
 count_frame = 0
 count = 0
+count_peak = 0
 replay = 0
 num_repetition = 0
+current_num_repetition = 0
 hold = 0 #to hold the repetition to avoid keep adding when the angle is 45 degrees
+risk_back_list = []
+peak_risk_back = 0
 last_time = time.time()
 while True:
     count_frame += 1
@@ -201,18 +206,37 @@ while True:
                 M = moment.moment()
 
                 if (M[6] * 180 / math.pi) >= 45 and hold == 0:
-                    num_repetition += 1
+                    current_num_repetition = num_repetition + 1
                     hold = 1
                 elif (M[6] * 180 / math.pi) < 45:
                     hold = 0
 
                 risk = Risk(M[0], M[1], 0, 0, num_repetition)
-                risk_back, accumulated_risk_back, risk_shoulder = risk.risk()
+                
+                risk_back_per_repetition, risk_back, risk_shoulder_per_repetition, risk_shoulder, compressive_force = risk.risk()
+
+                if current_num_repetition != num_repetition:
+                    if risk_back_list is not None:
+                        peak_risk_back = max(risk_back_list)
+                        count_peak = count
+                    risk_back_list = []
+                if current_num_repetition == num_repetition:
+                    risk_back_list.append(risk_back)
+                
+                num_repetition = current_num_repetition #update the number of repetition to the current number of repetition
+
                 print(f'Risk Probability of Low Back: {risk_back}')
                 print(f'Accumulated Risk Probability of Low Back: {risk_back}')
                 print(f'Repetition: {num_repetition}')
 
-                animate(count, risk_back, accumulated_risk_back)
+                cumulative_damage(count, count_peak, risk_back_per_repetition, peak_risk_back)
+
+                # if compressive_force >= ACTION_LIMIT:
+                #     # Example usage of the function with a high risk motion
+                #     non_cumulative_damage('high')
+                # else:
+                #     non_cumulative_damage('low')
+
 
                 if replay != 1:
                     with open('moment_back.json') as f1:
@@ -239,9 +263,9 @@ while True:
                     print(f'Moment about Shoulder: {M[3]}Nm')
                     print(f'Low Back Flexion Angle: {M[6] * 180 / math.pi}deg')
                     print(f'frame: {count_frame}')
-                    cv2.putText(frame, f'Moment about Low Back: {M[0]}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
-                    cv2.putText(frame, f'Moment about Shoulder: {M[3]}', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
-                    cv2.putText(frame, f'Spine Flexion Angle:   {M[6] * 180 / math.pi}deg', (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(frame, f'Moment about Low Back: {round(M[0], 3)}Nm', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(frame, f'Moment about Shoulder: {round(M[3], 3)}Nm', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
+                    cv2.putText(frame, f'Spine Flexion Angle:   {round((M[6] * 180 / math.pi), 3)}deg', (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
                 # elif body_part == 'shoulder':
                 #     print(f'Moment about Shoulders: {moment[1]}Nm')
                 #     print(f'Low Back Flexion Angle: {moment[2] * 180 / math.pi}deg')
