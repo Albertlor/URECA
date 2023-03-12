@@ -13,10 +13,10 @@ def midpoint(left_body_part, right_body_part):
 def magnitude(vector):
     return math.sqrt(sum(pow(element, 2) for element in vector))
 
-def moment_of_inertia(load, weight, m, k_s, k_t, k_l, L):
-    I_xx = (m * weight) * (k_s * L)**2 #moment of inertia about sagittal axis
-    I_yy = (m * weight) * (k_l * L)**2 #moment of inertia about longitudinal axis
-    I_zz = (m * weight) * (k_t * L)**2 #moment of inertia about longitudinal axis
+def moment_of_inertia(load, mass, m, k_s, k_t, k_l, L):
+    I_xx = (m * mass) * (k_s * L)**2 #moment of inertia about sagittal axis
+    I_yy = (m * mass) * (k_l * L)**2 #moment of inertia about longitudinal axis
+    I_zz = (m * mass) * (k_t * L)**2 #moment of inertia about longitudinal axis
 
     return I_xx + I_yy + I_zz
 
