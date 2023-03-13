@@ -39,7 +39,7 @@ JSON_FILENAME = {
 The person we want to specify
 """
 INDIVIDUAL = args["individual"]
-LOAD = 250 #in Newton
+LOAD = 0 #in Newton
 WEIGHT = 600 #in Newton
 ACTION_LIMIT = 3433 #in Newton
 

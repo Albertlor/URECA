@@ -4,8 +4,8 @@ import math
 class Risk:
     US_back = 6000 # in Newton
     US_shoulder = 100e6 # in Pascal
-    a = 11 #hyperparameter decided by the ergonomics specialists
-    b = -800
+    a = 10.7 #hyperparameter decided by the ergonomics specialists a=9.7, b=250
+    b = 450
     previous_cd_back = 1e-20
     previous_cd_shoulder = 1e-20
     p_back = 1.72
