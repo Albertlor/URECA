@@ -20,6 +20,15 @@ ap.add_argument("-i", "--individual", type=int, required=True, help="Which indiv
 ap.add_argument("-v", "--video", type=str, help="path to the input video")
 args = vars(ap.parse_args())
 
+def empty(empty):
+    pass
+
+cv2.namedWindow("Input")
+cv2.resizeWindow("Input", 450, 200)
+cv2.createTrackbar("a", "Input", 10, 100, empty)
+cv2.createTrackbar("b", "Input", 0, 100, empty)
+cv2.createTrackbar("c", "Input", 3, 100, empty)
+cv2.createTrackbar("d", "Input", 355, 500, empty)
 
 JSON_FILENAME = {
     "LOW_BACK": "low_back_dict_json.json",
@@ -39,7 +48,7 @@ JSON_FILENAME = {
 The person we want to specify
 """
 INDIVIDUAL = args["individual"]
-LOAD = 0 #in Newton
+LOAD = 166 #in Newton
 WEIGHT = 600 #in Newton
 ACTION_LIMIT = 3433 #in Newton
 
@@ -176,7 +185,7 @@ y2_values = []
 previous_y2 = 0
 
 set_threshold = 0
-def cumulative_damage(frame_num, count_peak, force, accumulated_risk_back, risk_threshold):
+def low_back_cumulative_damage(frame_num, count_peak, force, accumulated_risk_back, risk_back_threshold):
     global set_threshold
 
     x1_values.append(frame_num)
@@ -196,7 +205,7 @@ def cumulative_damage(frame_num, count_peak, force, accumulated_risk_back, risk_
     
     # plot new data
     orange_line = ax.axhline(y=3433, linestyle='--', color='orange')
-    blue_line = ax2.axhline(y=risk_threshold, linestyle='--', color='blue')
+    blue_line = ax2.axhline(y=risk_back_threshold, linestyle='--', color='blue')
     green_line, = ax.plot(x1_values, y1_values, 'go-', linewidth=1, markersize=3)
     red_line, = ax2.plot(x2_values, y2_values, 'ro-', linewidth=1, markersize=3)
     handles = [orange_line, green_line, blue_line, red_line]
@@ -211,6 +220,49 @@ def cumulative_damage(frame_num, count_peak, force, accumulated_risk_back, risk_
     # set axis limits (optional)
     ax.set_xlim(0, 4000)
     ax.set_ylim(0, 6000)
+    ax2.set_ylim(0, 1)
+
+    # add legend
+    ax.legend(handles=handles, loc='upper left', labels=['Action Limit', 'Force', 'Risk Threshold', 'Risk'], facecolor='white', edgecolor='black')
+    
+    # pause briefly to allow plot to be displayed
+    plt.pause(0.01)
+
+def shoulder_cumulative_damage(frame_num, count_peak, force, accumulated_risk_shoulder, risk_shoulder_threshold):
+    global set_threshold
+
+    x1_values.append(frame_num)
+    y1_values.append(force)
+
+    if frame_num == 1:
+        x2_values.append(count_peak)
+        y2_values.append(accumulated_risk_shoulder)
+    
+    elif accumulated_risk_shoulder != previous_y2 and frame_num != 1:
+        x2_values.append(count_peak)
+        y2_values.append(accumulated_risk_shoulder)
+
+    # clear previous plot
+    ax.cla()
+    ax2.cla()
+    
+    # plot new data
+    orange_line = ax.axhline(y=0, linestyle='--', color='orange')
+    blue_line = ax2.axhline(y=risk_shoulder_threshold, linestyle='--', color='blue')
+    green_line, = ax.plot(x1_values, y1_values, 'go-', linewidth=1, markersize=3)
+    red_line, = ax2.plot(x2_values, y2_values, 'ro-', linewidth=1, markersize=3)
+    handles = [orange_line, green_line, blue_line, red_line]
+    
+    # add plot decorations (e.g. title, labels)
+    plt.title('Ergonomic Risk of Shoulder')
+    ax.set_xlabel('Frame')
+    ax.set_ylabel('Force')
+    ax2.set_ylabel('Risk')
+    ax2.yaxis.set_label_coords(1.1, 0.5)
+    
+    # set axis limits (optional)
+    ax.set_xlim(0, 4000)
+    ax.set_ylim(0, 115)
     ax2.set_ylim(0, 1)
 
     # add legend
@@ -268,10 +320,14 @@ while True:
                     hold = 1
                 elif (M[6] * 180 / math.pi) < 45:
                     hold = 0
-
-                risk = Risk(M[0], M[1], M[3], M[4], num_repetition)
                 
-                risk_back, risk_shoulder, compressive_force_back, compressive_force_shoulder, risk_threshold = risk.risk()
+                a = cv2.getTrackbarPos("a", "Input")
+                b = cv2.getTrackbarPos("b", "Input")
+                c = cv2.getTrackbarPos("c", "Input")
+                d = cv2.getTrackbarPos("d", "Input")  
+                risk = Risk(M[0], M[1], M[3], M[4], num_repetition, a, b, c, d)
+                
+                risk_back, risk_shoulder, compressive_force_back, compressive_force_shoulder, risk_back_threshold, risk_shoulder_threshold, S_shoulder = risk.risk()
 
                 if current_num_repetition != num_repetition:
                     if risk_back_list is not None:
@@ -311,7 +367,7 @@ while True:
                 body_part = (args["body_part"]).lower()
 
                 if body_part == 'low_back':
-                    cumulative_damage(frame_num, count_peak, compressive_force_back, peak_risk_back, risk_threshold)
+                    low_back_cumulative_damage(frame_num, count_peak, compressive_force_back, peak_risk_back, risk_back_threshold)
                     print(f'frame: {count_frame}')
                     print(f'Moment about Low Back: {M[0]}Nm')
                     print(f'Low Back Compression Force: {compressive_force_back}N')
@@ -324,12 +380,13 @@ while True:
                     cv2.putText(frame, f'Spine Flexion Angle:   {round((M[6] * 180 / math.pi), 3)}deg', (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
                     cv2.putText(frame, f'Repetition: {num_repetition}', (50, 140), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
 
-                    if risk_back <= risk_threshold:
+                    if risk_back <= risk_back_threshold:
                         cv2.putText(frame, f'Risk:   {round((risk_back * 100), 3)}%', (50, 170), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
-                    if risk_back > risk_threshold:
+                    if risk_back > risk_back_threshold:
                         cv2.putText(frame, f'Risk:   {round((risk_back * 100), 3)}%', (50, 170), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 1, cv2.LINE_AA)
+
                 elif body_part == 'shoulder':
-                    cumulative_damage(frame_num, count_peak, compressive_force_shoulder, peak_risk_shoulder, risk_threshold)
+                    shoulder_cumulative_damage(frame_num, count_peak, compressive_force_shoulder, peak_risk_shoulder, risk_shoulder_threshold)
                     print(f'frame: {count_frame}')
                     print(f'Moment about Shoulder: {M[3]}Nm')
                     print(f'Shoulder Compression Force: {compressive_force_shoulder}N')
@@ -342,10 +399,13 @@ while True:
                     cv2.putText(frame, f'Shoulder Elevation Angle:   {round((M[7] * 180 / math.pi), 3)}deg', (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
                     cv2.putText(frame, f'Repetition: {num_repetition}', (50, 140), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
 
-                    if risk_back <= risk_threshold:
+                    if risk_shoulder <= risk_shoulder_threshold:
                         cv2.putText(frame, f'Risk:   {round((risk_shoulder * 100), 3)}%', (50, 170), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
-                    if risk_back > risk_threshold:
+                    if risk_shoulder > risk_shoulder_threshold:
                         cv2.putText(frame, f'Risk:   {round((risk_shoulder * 100), 3)}%', (50, 170), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 1, cv2.LINE_AA)
+                    if S_shoulder > 100 or S_shoulder < 0:
+                        cv2.putText(frame, 'Error', (50, 170), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 1, cv2.LINE_AA)
+                
                 # elif body_part == 'all':
                 #     print(f'Moment about Low Back: {moment[0]}Nm')
                 #     print(f'Moment about Shoulders: {moment[1]}Nm')
