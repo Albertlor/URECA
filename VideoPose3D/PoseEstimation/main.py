@@ -23,6 +23,8 @@ ap.add_argument("-v", "--video", type=str, help="path to the input video")
 args = vars(ap.parse_args())
 
 
+exist = args['exist']
+
 JSON_FILENAME = {
     "LOW_BACK": "low_back_dict_json.json",
     "CENTER_TORSO": "center_torso_dict_json.json",
@@ -41,9 +43,13 @@ JSON_FILENAME = {
 The person we want to specify
 """
 INDIVIDUAL = args["individual"]
-LOAD = 0 #in Newton
-WEIGHT = 600 #in Newton
+LOAD = 70 #in Newton
+WEIGHT = 730 #in Newton
 ACTION_LIMIT = 3433 #in Newton
+A = 10
+B = 0
+C = 0
+D = 0
 
 
 """
@@ -71,21 +77,21 @@ if NEW_KEYPOINTS == False:
 
     JSONFILEPATH_DICT = {}
     for BODY_PART in BODY_PART_LIST:
-        JSONFILEPATH = rf"C:\Users\ASUS\Academic\URECA\VideoPose3D\PoseEstimation\database\json_data\Individual_{INDIVIDUAL}\{JSON_FILENAME[BODY_PART]}"
+        JSONFILEPATH = rf"C:\Users\Albertlor\Academic\URECA\VideoPose3D\PoseEstimation\database\json_data\Individual_{INDIVIDUAL}\{JSON_FILENAME[BODY_PART]}"
         JSONFILEPATH_DICT[BODY_PART] = JSONFILEPATH
 
     database = Database(jsonPathDict=JSONFILEPATH_DICT, individual=INDIVIDUAL)
 
 # If creating a new json file to database
 else:
-    NPYFILEPATH = rf"C:\Users\ASUS\Academic\URECA\VideoPose3D\PoseEstimation\database\npy_data\Individual_{INDIVIDUAL}\Individual_{INDIVIDUAL}_output.npy"
+    NPYFILEPATH = rf"C:\Users\Albertlor\Academic\URECA\VideoPose3D\PoseEstimation\database\npy_data\Individual_{INDIVIDUAL}\Individual_{INDIVIDUAL}_output.npy"
     database = Database(npyPath=NPYFILEPATH, individual=INDIVIDUAL)
 
 
 """
 Specify the directory where the JSON file has to be written to. 
 """
-PARENT_DIRECTORY = r"C:\Users\ASUS\Academic\URECA\VideoPose3D\PoseEstimation\database\json_data"
+PARENT_DIRECTORY = rf"C:\Users\Albertlor\Academic\URECA\VideoPose3D\PoseEstimation\database\json_data"
 DIRECTORY = f"Individual_{INDIVIDUAL}"
 PATH = os.path.join(PARENT_DIRECTORY, DIRECTORY)
 
@@ -233,6 +239,7 @@ while True:
     duration = time.time() - last_time
 
     last_time = time.time()
+    time.sleep(0.000000001)
     fps = str(round((1/duration), 2))
 
     if ret and (count_frame%5==0):
@@ -271,9 +278,9 @@ while True:
                 elif (M[6] * 180 / math.pi) < 45:
                     hold = 0
 
-                risk = Risk(M[0], M[1], M[3], M[4], num_repetition)
+                risk = Risk(M[0], M[1], M[3], M[4], num_repetition, A, B, C, D)
                 
-                risk_back, risk_shoulder, compressive_force_back, compressive_force_shoulder, risk_threshold = risk.risk()
+                risk_back, risk_shoulder, compressive_force_back, compressive_force_shoulder, risk_threshold, a, b, c, d = risk.risk()
 
                 if current_num_repetition != num_repetition:
                     if risk_back_list is not None:

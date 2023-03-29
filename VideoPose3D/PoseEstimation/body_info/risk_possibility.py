@@ -43,7 +43,7 @@ class Risk:
         compressive_force_back = self.F_back + (self.M_back * self.a + self.b)
         compressive_force_shoulder = self.F_shoulder + (self.M_shoulder * self.c - self.d)
 
-        return r_back, r_shoulder, compressive_force_back, compressive_force_shoulder, r_back_threshold, r_shoulder_threshold, S_shoulder
+        return r_back, r_shoulder, compressive_force_back, compressive_force_shoulder, r_back_threshold, self.a, self.b, self.c, self.d
     
     @classmethod
     def cumulative_damage(cls, M_back, F_back, M_shoulder, F_shoulder, a, b, c, d):
