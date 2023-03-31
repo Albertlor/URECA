@@ -13,7 +13,6 @@ from body_info.keypoints import Keypoints
 from body_info.moment import Moment
 from body_info.risk_possibility import Risk
 from database.database import Database
-from pprint import pprint
 
 ap = argparse.ArgumentParser()
 ap.add_argument("-b", "--body_part", type=str, help="body part to study")
@@ -23,24 +22,14 @@ ap.add_argument("-v", "--video", type=str, help="path to the input video")
 args = vars(ap.parse_args())
 
 
-exist = args['exist']
-
-JSON_FILENAME = {
-    "LOW_BACK": "low_back_dict_json.json",
-    "CENTER_TORSO": "center_torso_dict_json.json",
-    "UPPER_TORSO": "upper_torso_dict_json.json",
-    "CENTER_HEAD": "center_head_dict_json.json",
-    "LEFT_SHOULDER": "left_shoulder_dict_json.json",
-    "LEFT_ELBOW": "left_elbow_dict_json.json",
-    "LEFT_HAND": "left_hand_dict_json.json",
-    "RIGHT_SHOULDER": "right_shoulder_dict_json.json",
-    "RIGHT_ELBOW": "right_elbow_dict_json.json",
-    "RIGHT_HAND": "right_hand_dict_json.json"
-}
-
+BODY_PART_LIST = ['LOW_BACK', 'RIGHT_HIP', 'RIGHT_KNEE', 'RIGHT_FOOT', \
+                  'LEFT_HIP', 'LEFT_KNEE', 'LEFT_FOOT', \
+                  'CENTER_TORSO', 'UPPER_TORSO', 'NOSE', 'CENTER_HEAD', \
+                  'LEFT_SHOULDER', 'LEFT_ELBOW', 'LEFT_HAND', \
+                  'RIGHT_SHOULDER', 'RIGHT_ELBOW', 'RIGHT_HAND']
 
 """
-The person we want to specify
+The information of the person whom we want to specify
 """
 INDIVIDUAL = args["individual"]
 LOAD = 70 #in Newton
@@ -64,20 +53,9 @@ else:
 
 # If reading an existing json file from database
 if NEW_KEYPOINTS == False:
-    BODY_PART_LIST = ["LOW_BACK", 
-                      "CENTER_TORSO",
-                      "UPPER_TORSO",
-                      "CENTER_HEAD", 
-                      "LEFT_SHOULDER",
-                      "LEFT_ELBOW", 
-                      "LEFT_HAND",
-                      "RIGHT_SHOULDER",
-                      "RIGHT_ELBOW", 
-                      "RIGHT_HAND"]
-
     JSONFILEPATH_DICT = {}
     for BODY_PART in BODY_PART_LIST:
-        JSONFILEPATH = rf"C:\Users\Albertlor\Academic\URECA\VideoPose3D\PoseEstimation\database\json_data\Individual_{INDIVIDUAL}\{JSON_FILENAME[BODY_PART]}"
+        JSONFILEPATH = rf"C:\Users\Albertlor\Academic\URECA\VideoPose3D\PoseEstimation\database\json_data\Individual_{INDIVIDUAL}\{BODY_PART.lower()}_dict_json.json"
         JSONFILEPATH_DICT[BODY_PART] = JSONFILEPATH
 
     database = Database(jsonPathDict=JSONFILEPATH_DICT, individual=INDIVIDUAL)
@@ -122,11 +100,8 @@ def read_from_database(new_keypoints=True):
                 coordinates_list.append(i)
         
             body_part_dict[BODY_PART_LIST[count]] = coordinates_list
-            # print(BODY_PART_LIST[count])
-            # print(body_part_dict)
             count += 1
         
-        # pprint(body_part_dict, indent=4)
         return body_part_dict
     
 def write_to_database(coordinates):
@@ -137,16 +112,11 @@ def write_to_database(coordinates):
     create_directory()
     keypoints = Keypoints(coordinates, individual=INDIVIDUAL)
     json_file_dict = {}
-    json_file_dict['low_back_dict_json'] = keypoints.low_back_keypoint()
-    json_file_dict['center_torso_dict_json'] = keypoints.center_torso_keypoint()
-    json_file_dict['upper_torso_dict_json'] = keypoints.upper_torso_keypoint()
-    json_file_dict['center_head_dict_json'] = keypoints.center_head_keypoint()
-    json_file_dict['left_shoulder_dict_json'] = keypoints.left_shoulder_keypoint()
-    json_file_dict['left_elbow_dict_json'] = keypoints.left_elbow_keypoint()
-    json_file_dict['left_hand_dict_json'] = keypoints.left_hand_keypoint()
-    json_file_dict['right_shoulder_dict_json'] = keypoints.right_shoulder_keypoint()
-    json_file_dict['right_elbow_dict_json'] = keypoints.right_elbow_keypoint()
-    json_file_dict['right_hand_dict_json'] = keypoints.right_hand_keypoint()
+    body_part_dict_json_list = keypoints.body_part_keypoint()
+    count_body_part = 0
+    for BODY_PART in BODY_PART_LIST:
+        json_file_dict[f'{BODY_PART.lower()}_dict_json'] = body_part_dict_json_list[count_body_part]
+        count_body_part+=1
 
     for filename, file in json_file_dict.items():
         database.write_json_data(json_file=file, json_filename=filename)
@@ -158,6 +128,7 @@ def create_directory():
     if os.path.isdir(PATH) == False:
         os.mkdir(PATH)
         print(f'Successfully created directory {DIRECTORY}!')  
+
 
 video = cv2.VideoCapture(args["video"])
 count_frame = 0
@@ -185,6 +156,9 @@ previous_y2 = 0
 
 set_threshold = 0
 def cumulative_damage(frame_num, count_peak, force, accumulated_risk_back, risk_threshold):
+    """
+    Plot the graph to visualize the cumulative damage and compressive force
+    """
     global set_threshold
 
     x1_values.append(frame_num)
