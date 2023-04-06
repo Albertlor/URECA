@@ -10,10 +10,15 @@ class Moment:
     g_mag = 9.81 #graity
     g_dir = [0, 0, 0]
 
-    m1 = 0.0162 #mass percentage of forearm
-    m2 = 0.0271 #mass percentage of upper arm
-    m3 = 0.4346 #mass percentage of head
-    m4 = 0.4346 #mass percentage of trunk
+    # m1 = 0.0162 #mass percentage of forearm
+    # m2 = 0.0271 #mass percentage of upper arm
+    # m3 = 0.4346 #mass percentage of head
+    # m4 = 0.4346 #mass percentage of trunk
+
+    m1 = 0.0187 #mass percentage of forearm
+    m2 = 0.0325 #mass percentage of upper arm
+    m3 = 0.0826 #mass percentage of head
+    m4 = 0.551 #mass percentage of trunk
 
     rA = []
     rB = []
@@ -271,48 +276,48 @@ class Moment:
             I3 = I_head
             I4 = I_trunk
 
-            r1 = (np.array(cls.rI) - np.array(cls.rA))[2]
-            r2 = (np.array(cls.rG) - np.array(cls.rA))[2]
+            # r1 = (np.array(cls.rI) - np.array(cls.rA))[2]
+            # r2 = (np.array(cls.rG) - np.array(cls.rA))[2]
+            # r3 = (np.array(cls.rD) - np.array(cls.rA))[2]
+            # r4 = (np.array(cls.rB) - np.array(cls.rA))[2]
+            # r5 = (np.array(cls.rG) - np.array(cls.rE))[2]
+            # r6 = (np.array(cls.rI) - np.array(cls.rE))[2]
+
+            r1 = np.multiply(((np.array(cls.rI) - np.array(cls.rA)) - (np.array(cls.rG) - np.array(cls.rA)))[2], 0.5) + np.array(cls.rA)[2]
+            r2 = np.multiply(((np.array(cls.rG) - np.array(cls.rA)) - (np.array(cls.rE) - np.array(cls.rA)))[2], 0.5) + np.array(cls.rA)[2]
             r3 = (np.array(cls.rD) - np.array(cls.rA))[2]
             r4 = (np.array(cls.rB) - np.array(cls.rA))[2]
-            r5 = (np.array(cls.rG) - np.array(cls.rE))[2]
-            r6 = (np.array(cls.rI) - np.array(cls.rE))[2]
 
             F_L = np.multiply(load, cls.g_dir)
             g = np.multiply(cls.g_mag, cls.g_dir)
 
             theta_back = cls.angle_between_spine_and_vertical_plane()
-            theta_shoulder = cls.angle_between_shoulder_and_horizontal_plane()
 
-            M_back = -np.cross(r1, F_L) - \
-                     (np.cross(r1, np.multiply(2 * mass * cls.m1, g)) + np.cross(r2, np.multiply(2 * mass * cls.m2, g)) + np.cross(r3, np.multiply(mass * cls.m3, g)) + np.cross(r4, np.multiply(mass * cls.m4, g))) + \
+            M_back = (np.cross(r1, np.multiply(2 * mass * cls.m1, g)) + np.cross(r2, np.multiply(2 * mass * cls.m2, g)) + np.cross(r3, np.multiply(mass * cls.m3, g)) + np.cross(r4, np.multiply(mass * cls.m4, g))) + \
                      (np.cross(r1, np.multiply(2 * mass * cls.m1, a1)) + np.cross(r2, np.multiply(2 * mass * cls.m2, a2)) + np.cross(r3, np.multiply(mass * cls.m3, a3)) + np.cross(r4, np.multiply(mass * cls.m4, a4))) + \
                      (np.multiply(2 * I1, alpha1) + np.multiply(2 * I2, alpha2) + np.multiply(I3, alpha3) + np.multiply(I4, alpha4))
             
-            F_back_mag = abs( np.dot((np.multiply(2 * mass * cls.m1, g) + np.multiply(2 * mass * cls.m2, g) + np.multiply(mass * cls.m3, g) + np.multiply(mass * cls.m4, g) + \
-                                      np.multiply(2 * mass * cls.m1, a1) + np.multiply(2 * mass * cls.m2, a2) + np.multiply(mass * cls.m3, a3) + np.multiply(mass * cls.m4, a4) + \
-                                      F_L), np.multiply(r4, 1/magnitude(r4))) )
+            F_back = (np.multiply(2 * mass * cls.m1, g) + np.multiply(2 * mass * cls.m2, g) + np.multiply(mass * cls.m3, g) + np.multiply(mass * cls.m4, g)) + \
+                     (np.multiply(2 * mass * cls.m1, a1) + np.multiply(2 * mass * cls.m2, a2) + np.multiply(mass * cls.m3, a3) + np.multiply(mass * cls.m4, a4))
+            
+            # M_back = -(np.cross(r1, F_L)) - \
+            #          (np.cross(r1, np.multiply(2 * mass * cls.m1, g)) + np.cross(r2, np.multiply(2 * mass * cls.m2, g)) + np.cross(r3, np.multiply(mass * cls.m3, g)) + np.cross(r4, np.multiply(mass * cls.m4, g))) + \
+            #          (np.cross(r1, np.multiply(2 * mass * cls.m1, a1)) + np.cross(r2, np.multiply(2 * mass * cls.m2, a2)) + np.cross(r3, np.multiply(mass * cls.m3, a3)) + np.cross(r4, np.multiply(mass * cls.m4, a4))) + \
+            #          (np.multiply(2 * I1, alpha1) + np.multiply(2 * I2, alpha2) + np.multiply(I3, alpha3) + np.multiply(I4, alpha4))
+            
+            # F_back_mag = abs( np.dot(( F_L + \
+            #                            (np.multiply(2 * mass * cls.m1, g) + np.multiply(2 * mass * cls.m2, g) + np.multiply(mass * cls.m3, g) + np.multiply(mass * cls.m4, g)) + \
+            #                            (np.multiply(2 * mass * cls.m1, a1) + np.multiply(2 * mass * cls.m2, a2) + np.multiply(mass * cls.m3, a3) + np.multiply(mass * cls.m4, a4))), np.multiply(r4, 1/magnitude(r4))) )
             
             # gamma = math.acos(np.dot(r1, cls.g_dir) / magnitude(r1))
 
             # F_back_mag = 0.045*168*weight*math.sin(theta) + 0.5*(magnitude(F_L))*(magnitude(r1))*math.sin(gamma) + 0.4*weight + 0.8*magnitude(F_L)
-            
-            M_shoulder = -np.cross(r6, F_L) - \
-                         (np.cross(r6, np.multiply(2 * mass * cls.m1, g)) + np.cross(r5, np.multiply(2 * mass * cls.m2, g))) + \
-                         (np.cross(r6, np.multiply(2 * mass * cls.m1, a1)) + np.cross(r5, np.multiply(2 * mass * cls.m2, a2))) + \
-                         (np.multiply(2 * I1, alpha1) + np.multiply(2 * I2, alpha2))
-            
-            F_shoulder_mag = abs( np.dot((np.multiply(2 * mass * cls.m1, g) + np.multiply(2 * mass * cls.m2, g) + \
-                                          np.multiply(2 * mass * cls.m1, a1) + np.multiply(2 * mass * cls.m2, a2) + \
-                                          F_L), cls.g_dir) )
 
-            M_back_mag = magnitude(M_back.tolist())
+            M_back_mag = magnitude(M_back.tolist()) + ((load / 10) / 5) * 20
+            F_back_mag = magnitude(F_back.tolist()) + ((load / 10) / 5) * 800
             M_back_dir = np.multiply(M_back, 1/M_back_mag)
 
-            M_shoulder_mag = magnitude(M_shoulder.tolist())
-            M_shoulder_dir = np.multiply(M_shoulder, 1/M_shoulder_mag)
-
-            return [M_back_mag, F_back_mag, M_back_dir, M_shoulder_mag, F_shoulder_mag, M_shoulder_dir, theta_back, theta_shoulder]
+            return [M_back_mag, F_back_mag, M_back_dir, theta_back]
 
         except Exception as e:
             import traceback

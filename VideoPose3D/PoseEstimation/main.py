@@ -32,13 +32,10 @@ BODY_PART_LIST = ['LOW_BACK', 'RIGHT_HIP', 'RIGHT_KNEE', 'RIGHT_FOOT', \
 The information of the person whom we want to specify
 """
 INDIVIDUAL = args["individual"]
-LOAD = 70 #in Newton
-WEIGHT = 730 #in Newton
+LOAD = 160 #in Newton
+WEIGHT = 600 #in Newton
 ACTION_LIMIT = 3433 #in Newton
-A = 10
-B = 0
-C = 0
-D = 0
+A = 5
 
 
 """
@@ -179,8 +176,8 @@ def cumulative_damage(frame_num, count_peak, force, accumulated_risk_back, risk_
     # plot new data
     orange_line = ax.axhline(y=3433, linestyle='--', color='orange')
     blue_line = ax2.axhline(y=risk_threshold, linestyle='--', color='blue')
-    green_line, = ax.plot(x1_values, y1_values, 'go-', linewidth=1, markersize=3)
-    red_line, = ax2.plot(x2_values, y2_values, 'ro-', linewidth=1, markersize=3)
+    green_line, = ax.plot(x1_values, y1_values, 'go-', linewidth=1, markersize=1)
+    red_line, = ax2.plot(x2_values, y2_values, 'ro-', linewidth=1, markersize=1)
     handles = [orange_line, green_line, blue_line, red_line]
     
     # add plot decorations (e.g. title, labels)
@@ -191,12 +188,12 @@ def cumulative_damage(frame_num, count_peak, force, accumulated_risk_back, risk_
     ax2.yaxis.set_label_coords(1.1, 0.5)
     
     # set axis limits (optional)
-    ax.set_xlim(0, 4000)
+    ax.set_xlim(0, 2000)
     ax.set_ylim(0, 6000)
     ax2.set_ylim(0, 1)
 
     # add legend
-    ax.legend(handles=handles, loc='upper left', labels=['Action Limit', 'Force', 'Risk Threshold', 'Risk'], facecolor='white', edgecolor='black')
+    ax.legend(handles=handles, loc='upper right', labels=['Action Limit', 'Force', 'Risk Threshold', 'Risk'], facecolor='white', edgecolor='black')
     
     # pause briefly to allow plot to be displayed
     plt.pause(0.01)
@@ -246,15 +243,15 @@ while True:
                 moment = Moment()
                 M = moment.moment()
 
-                if (M[6] * 180 / math.pi) >= 45 and hold == 0:
+                if (M[3] * 180 / math.pi) >= 45 and hold == 0:
                     current_num_repetition = num_repetition + 1
                     hold = 1
-                elif (M[6] * 180 / math.pi) < 45:
+                elif (M[3] * 180 / math.pi) < 45:
                     hold = 0
 
-                risk = Risk(M[0], M[1], M[3], M[4], num_repetition, A, B, C, D)
+                risk = Risk(M[0], M[1], num_repetition, A)
                 
-                risk_back, risk_shoulder, compressive_force_back, compressive_force_shoulder, risk_threshold, a, b, c, d = risk.risk()
+                risk_back, compressive_force_back, risk_threshold = risk.risk()
 
                 if current_num_repetition != num_repetition:
                     if risk_back_list is not None:
@@ -262,14 +259,8 @@ while True:
                         count_peak = frame_num
                     risk_back_list = []
 
-                    if risk_shoulder_list is not None:
-                        peak_risk_shoulder = max(risk_shoulder_list)
-                        count_peak = frame_num
-                    risk_shoulder_list = []
-
                 if current_num_repetition == num_repetition:
                     risk_back_list.append(risk_back)
-                    risk_shoulder_list.append(risk_shoulder)
                 
                 num_repetition = current_num_repetition #update the number of repetition to the current number of repetition
 
@@ -282,13 +273,12 @@ while True:
                     with open('moment_back.json', 'w') as f1:
                         json.dump(config1, f1, indent=4)
 
-
-                    with open('moment_shoulder.json') as f2:
+                    with open('force_back.json') as f2:
                         config2 = json.load(f2)
 
-                    config2[f"Moment_Shoulder_{count_frame}"] = M[3]
+                    config2[f"Force_Back_{count_frame}"] = compressive_force_back
 
-                    with open('moment_shoulder.json', 'w') as f2:
+                    with open('force_back.json', 'w') as f2:
                         json.dump(config2, f2, indent=4)
 
                 body_part = (args["body_part"]).lower()
@@ -298,45 +288,19 @@ while True:
                     print(f'frame: {count_frame}')
                     print(f'Moment about Low Back: {M[0]}Nm')
                     print(f'Low Back Compression Force: {compressive_force_back}N')
-                    print(f'Spine Flexion Angle: {M[6] * 180 / math.pi}deg')
+                    print(f'Spine Flexion Angle: {M[3] * 180 / math.pi}deg')
                     print(f'Repetition: {num_repetition}')
                     print(f'Accumulated Risk Probability of Low Back: {risk_back}')
                 
                     cv2.putText(frame, f'Moment about Low Back: {round(M[0], 3)}Nm', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
                     cv2.putText(frame, f'Low Back Compression Force: {round(compressive_force_back, 3)}N', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
-                    cv2.putText(frame, f'Spine Flexion Angle:   {round((M[6] * 180 / math.pi), 3)}deg', (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
+                    cv2.putText(frame, f'Spine Flexion Angle:   {round((M[3] * 180 / math.pi), 3)}deg', (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
                     cv2.putText(frame, f'Repetition: {num_repetition}', (50, 140), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
 
                     if risk_back <= risk_threshold:
                         cv2.putText(frame, f'Risk:   {round((risk_back * 100), 3)}%', (50, 170), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
                     if risk_back > risk_threshold:
                         cv2.putText(frame, f'Risk:   {round((risk_back * 100), 3)}%', (50, 170), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 1, cv2.LINE_AA)
-                elif body_part == 'shoulder':
-                    cumulative_damage(frame_num, count_peak, compressive_force_shoulder, peak_risk_shoulder, risk_threshold)
-                    print(f'frame: {count_frame}')
-                    print(f'Moment about Shoulder: {M[3]}Nm')
-                    print(f'Shoulder Compression Force: {compressive_force_shoulder}N')
-                    print(f'Shoulder Elevation Angle: {M[7] * 180 / math.pi}deg')
-                    print(f'Repetition: {num_repetition}')
-                    print(f'Accumulated Risk Probability of Shoulder: {risk_shoulder}')
-                
-                    cv2.putText(frame, f'Moment about Shoulder: {round(M[3], 3)}Nm', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
-                    cv2.putText(frame, f'Shoulder Compression Force: {round(compressive_force_shoulder, 3)}N', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
-                    cv2.putText(frame, f'Shoulder Elevation Angle:   {round((M[7] * 180 / math.pi), 3)}deg', (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
-                    cv2.putText(frame, f'Repetition: {num_repetition}', (50, 140), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
-
-                    if risk_back <= risk_threshold:
-                        cv2.putText(frame, f'Risk:   {round((risk_shoulder * 100), 3)}%', (50, 170), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 193, 0), 1, cv2.LINE_AA)
-                    if risk_back > risk_threshold:
-                        cv2.putText(frame, f'Risk:   {round((risk_shoulder * 100), 3)}%', (50, 170), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 0, 255), 1, cv2.LINE_AA)
-                # elif body_part == 'all':
-                #     print(f'Moment about Low Back: {moment[0]}Nm')
-                #     print(f'Moment about Shoulders: {moment[1]}Nm')
-                #     print(f'Low Back Flexion Angle: {moment[2] * 180 / math.pi}deg')
-                #     print(f'frame: {count_frame}')
-                #     cv2.putText(frame, f'Moment about Low Back: {moment[0]}', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
-                #     cv2.putText(frame, f'Moment about Shoulder: {moment[1]}', (50, 80), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
-                #     cv2.putText(frame, f'Spine Flexion Angle:   {moment[2] * 180 / math.pi}deg', (50, 110), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 1, cv2.LINE_AA)
                 else:
                     print('Please enter a valid command!')
 
