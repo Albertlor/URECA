@@ -32,7 +32,7 @@ BODY_PART_LIST = ['LOW_BACK', 'RIGHT_HIP', 'RIGHT_KNEE', 'RIGHT_FOOT', \
 The information of the person whom we want to specify
 """
 INDIVIDUAL = args["individual"]
-LOAD = 160 #in Newton
+LOAD = 230 #in Newton
 WEIGHT = 600 #in Newton
 ACTION_LIMIT = 3433 #in Newton
 A = 5
