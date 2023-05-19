@@ -35,7 +35,7 @@ INDIVIDUAL = args["individual"]
 LOAD = 230 #in Newton
 WEIGHT = 600 #in Newton
 ACTION_LIMIT = 3433 #in Newton
-A = 5
+A = 4
 
 
 """
