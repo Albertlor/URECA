@@ -1,4 +1,8 @@
 import math
+import os
+import json
+import matplotlib.pyplot as plt
+import time
 
 
 class Risk:
@@ -19,7 +23,7 @@ class Risk:
 
     def risk(self):
         cd_threshold = 0.03
-        accumulated_cd_back = Risk.cumulative_damage(self.M_back, self.F_back, self.a)
+        accumulated_cd_back, S_back = Risk.cumulative_damage(self.M_back, self.F_back, self.a)
 
         Y_back = Risk.p_back + Risk.q_back * math.log(accumulated_cd_back + 1e-20) #add a very small number to ensure it's close to 0 but avoid ValueError
         r_back = math.exp(Y_back) / (1 + math.exp(Y_back))
@@ -29,7 +33,7 @@ class Risk:
 
         compressive_force_back = self.F_back + (self.M_back * self.a)
 
-        return r_back, compressive_force_back, r_back_threshold
+        return r_back, compressive_force_back, r_back_threshold, accumulated_cd_back, S_back
     
     @classmethod
     def cumulative_damage(cls, M_back, F_back, a):
@@ -40,7 +44,7 @@ class Risk:
         accumulated_cd_back = cd_back + cls.previous_cd_back
         cls.previous_cd_back = accumulated_cd_back
 
-        return accumulated_cd_back
+        return accumulated_cd_back, S_back
     
     @classmethod
     def percentage_ultimate_strength(cls, M_back, F_back, a):
@@ -49,4 +53,31 @@ class Risk:
         print(f'S_back: {S_back}')
 
         return S_back
+    
+if __name__ == '__main__':
+    dictionary1 = json.load(open('./cumulative_damage.json', 'r'))
+    xAxis1 = [key for key, value in dictionary1.items() if int(key)%50==0 and int(key)!=0]
+    yAxis1 = [value for key, value in dictionary1.items() if int(key)%50==0 and int(key)!=0]
+    
+    plt.grid(True)
+
+    ## LINE GRAPH ##
+    plt.plot(xAxis1,yAxis1, color='maroon', marker='o')
+    plt.xlabel('Frame')
+    plt.ylabel('Cumulative Damage')
         
+    plt.show()
+
+    plt.figure()
+    dictionary2 = json.load(open('./stress_back.json', 'r'))
+    xAxis2 = [key for key, value in dictionary2.items() if int(key)%50==0 and int(key)!=0]
+    yAxis2 = [value for key, value in dictionary2.items() if int(key)%50==0 and int(key)!=0]
+    
+    plt.grid(True)
+
+    ## LINE GRAPH ##
+    plt.plot(xAxis2,yAxis2, color='maroon', marker='o')
+    plt.xlabel('Frame')
+    plt.ylabel('Ultimate Strength Percentile (%)')
+
+    plt.show()

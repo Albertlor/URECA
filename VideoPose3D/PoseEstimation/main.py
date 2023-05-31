@@ -32,7 +32,7 @@ BODY_PART_LIST = ['LOW_BACK', 'RIGHT_HIP', 'RIGHT_KNEE', 'RIGHT_FOOT', \
 The information of the person whom we want to specify
 """
 INDIVIDUAL = args["individual"]
-LOAD = 230 #in Newton
+LOAD = 50 #in Newton
 WEIGHT = 600 #in Newton
 ACTION_LIMIT = 3433 #in Newton
 A = 4
@@ -183,7 +183,7 @@ def cumulative_damage(frame_num, count_peak, force, accumulated_risk_back, risk_
     # add plot decorations (e.g. title, labels)
     plt.title('Ergonomic Risk of Low Back')
     ax.set_xlabel('Frame')
-    ax.set_ylabel('Force')
+    ax.set_ylabel('Force (N)')
     ax2.set_ylabel('Risk')
     ax2.yaxis.set_label_coords(1.1, 0.5)
     
@@ -251,7 +251,48 @@ while True:
 
                 risk = Risk(M[0], M[1], num_repetition, A)
                 
-                risk_back, compressive_force_back, risk_threshold = risk.risk()
+                risk_back, compressive_force_back, risk_threshold, accumulated_cd_back, S_back = risk.risk()
+
+                """
+                Write cumulative damage to json file for graph plotting
+                """
+                path1 = './cumulative_damage.json'
+                check_file1 = os.path.isfile(path1)
+
+                if not check_file1:
+                    with open('cumulative_damage.json', 'w') as f1:
+                        json.dump({
+                            f"0": "example"
+                        }, f1, indent=4)
+
+                with open('cumulative_damage.json') as f1:
+                    cd = json.load(f1)
+
+                cd[current_num_repetition] = accumulated_cd_back
+
+                with open('cumulative_damage.json', 'w') as f1:
+                    json.dump(cd, f1, indent=4)
+
+                """
+                Write Stress to json file for graph plotting
+                """
+                path2 = './stress_back.json'
+                check_file2 = os.path.isfile(path2)
+
+                if not check_file2:
+                    with open('stress_back.json', 'w') as f2:
+                        json.dump({
+                            f"0": "example"
+                        }, f2, indent=4)
+
+                with open('stress_back.json') as f2:
+                    stress = json.load(f2)
+
+                stress[current_num_repetition] = S_back
+
+                with open('stress_back.json', 'w') as f2:
+                    json.dump(stress, f2, indent=4)
+
 
                 if current_num_repetition != num_repetition:
                     if risk_back_list is not None:
@@ -280,6 +321,14 @@ while True:
 
                     with open('force_back.json', 'w') as f2:
                         json.dump(config2, f2, indent=4)
+
+                    with open('spine_angle.json') as f3:
+                        config3 = json.load(f3)
+
+                    config3[f"{count_frame}"] = M[3] * 180 / math.pi
+
+                    with open('spine_angle.json', 'w') as f3:
+                        json.dump(config3, f3, indent=4)
 
                 body_part = (args["body_part"]).lower()
 

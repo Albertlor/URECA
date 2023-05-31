@@ -1,6 +1,7 @@
 import numpy as np
 import math
 import json
+import matplotlib.pyplot as plt
 
 from body_info.acceleration import Acceleration
 from body_info.utils import midpoint, magnitude, moment_of_inertia
@@ -314,7 +315,7 @@ class Moment:
             # F_back_mag = 0.045*168*weight*math.sin(theta) + 0.5*(magnitude(F_L))*(magnitude(r1))*math.sin(gamma) + 0.4*weight + 0.8*magnitude(F_L)
 
             M_back_mag = magnitude(M_back.tolist()) + ((load / 10) / 5) * 20
-            F_back_mag = magnitude(F_back.tolist()) + ((load / 10) / 5) * 1000
+            F_back_mag = magnitude(F_back.tolist()) + ((load / 10) / 5) * 920
             M_back_dir = np.multiply(M_back, 1/M_back_mag)
 
             return [M_back_mag, F_back_mag, M_back_dir, theta_back]
@@ -322,3 +323,15 @@ class Moment:
         except Exception as e:
             import traceback
             print(traceback.format_exc())
+
+if __name__ == '__main__':
+    dictionary1 = json.load(open('./spine_angle.json', 'r'))
+    xAxis1 = [key for key, value in dictionary1.items() if int(key)%15==0 and int(key)!=0]
+    yAxis1 = [value for key, value in dictionary1.items() if int(key)%15==0 and int(key)!=0]
+
+    ## LINE GRAPH ##
+    plt.plot(xAxis1,yAxis1, color='maroon', marker='o')
+    plt.xlabel('Frame')
+    plt.ylabel('Spine Angle (degree)')
+        
+    plt.show()
