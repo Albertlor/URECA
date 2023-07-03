@@ -32,7 +32,7 @@ BODY_PART_LIST = ['LOW_BACK', 'RIGHT_HIP', 'RIGHT_KNEE', 'RIGHT_FOOT', \
 The information of the person whom we want to specify
 """
 INDIVIDUAL = args["individual"]
-LOAD = 50 #in Newton
+LOAD = 0 #in Newton
 WEIGHT = 600 #in Newton
 ACTION_LIMIT = 3433 #in Newton
 A = 4
@@ -243,10 +243,21 @@ while True:
                 moment = Moment()
                 M = moment.moment()
 
-                if (M[3] * 180 / math.pi) >= 45 and hold == 0:
-                    current_num_repetition = num_repetition + 1
-                    hold = 1
-                elif (M[3] * 180 / math.pi) < 45:
+                # if (M[3] * 180 / math.pi) >= 45 and hold == 0:
+                #     current_num_repetition = num_repetition + 1
+                #     hold = 1
+                # elif (M[3] * 180 / math.pi) < 45:
+                #     hold = 0
+
+                if (M[3] * 180 / math.pi) >= 20:
+                    if hold == 0:
+                        start_time = time.time()
+                        hold = 1
+                    elapse_time = time.time() - start_time
+                    if elapse_time >= 1.7:
+                        current_num_repetition = num_repetition + 1
+                        start_time = time.time()
+                elif (M[3] * 180 / math.pi) < 20:
                     hold = 0
 
                 risk = Risk(M[0], M[1], num_repetition, A)

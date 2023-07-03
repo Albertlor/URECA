@@ -1,7 +1,7 @@
 {
-    "Individual": 1,
-    "Load": 50,
+    "Individual": 4,
+    "Load": 0,
     "Weight": 600,
-    "Duration": 0.03200078010559082,
-    "Frame": 70
+    "Duration": 0.028310775756835938,
+    "Frame": 120
 }
