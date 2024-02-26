@@ -20,6 +20,4 @@ https://github.com/facebookresearch/VideoPose3D/blob/main/INFERENCE.md
 ```
 python3 main.py --body_part low_back --exist 1 --individual 1 --video <actual_video_path>
 ```
-```
 Replace the <actual_video_path> with the path of 3D rendered video using VideoPose3D.
-```
