@@ -1,12 +1,12 @@
-# Undergraduate Research Project (Working with Asst Prof Kim Jinwoo)
-### The entire program was designed and create by me when I was an undergraduate student in year 2
+# Undergraduate Research Project
 ## Monocular Vision-Based 3D Human Pose Estimation and Cumulative Damage Assessment at Industrial Workplaces
 ## Publication of the paper on IEEE: https://ieeexplore.ieee.org/abstract/document/10406589
+### The entire program was designed and created by me when I was an undergraduate student in year 2 while working with Asst Prof Kim Jinwoo.
 This research aims to study how to improve the existing ergonomics risk assessment at industrial workplaces. One of the vulnerable body parts is the lumbar, where this was the body part that we were tackling with. 
 ## How to run?
 ### Step 1: Clone the project repo
 ```
-git clone 
+git clone git@github.com:Albertlor/URECA.git
 ```
 ### Step 2: Change directory into the project repo
 ```
